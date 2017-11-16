@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 
 	"github.com/stretchr/testify/assert"
+	"time"
 )
 
 type errorTester struct{}
@@ -108,4 +109,25 @@ func TestEngineFileServe(t *testing.T) {
 	resp3, _ := get(t, e, "/static/no-file-should-be-here")
 	assert.Equal(t, http.StatusNotFound, resp3.Code)
 
+}
+
+func TestEngineListenAndServe(t *testing.T) {
+	e := newEngineTest()
+	var err error
+	var errTLS error
+
+	go func () {
+		err = e.ListenAndServe(":1234")
+	}()
+
+	go func() {
+		errTLS = e.ListenAndServeTLS(":12345", "cert.pem", "key.pem")
+	}()
+
+
+	// wait for ListenAndServe to run
+	time.Sleep(time.Millisecond * 300)
+
+	assert.NoError(t, err)
+	assert.NoError(t, errTLS)
 }
